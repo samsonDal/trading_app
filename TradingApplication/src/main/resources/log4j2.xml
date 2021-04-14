@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration> <!-- set attribute monitorInterval="30" to monitor for changes to this log4j2 file every 30 seconds or so -->
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d [%t] %-5p [%c{3}] %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.trading.app.handlers.LargestTradeHandler" level="info"/>
+        <Root level="info">
+            <AppenderRef ref="CONSOLE"/>
+        </Root>
+    </Loggers>
+</Configuration>

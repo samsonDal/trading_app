@@ -1,0 +1,13 @@
+In a real market data system we usually tend to have a process that is in charge of subscribing to an external feed. It gets a tick
+from the external systems and publishes the data to any one listening to the tick events.
+I created a Feed Interface which provide the contract on how to subscribe/unsubscribe and receive tick events.
+Because this comes from an external feed it is advisable to have the handling of the tick on a different thread. This thread would simply
+get a tick and add that to the eventQueue of the listeners.
+
+The FeedListener runs on a separate thread and is going to consume the trades it receives on its queue. It knows what Handler to call to process the trade
+The TradeHandler interface provide contracts for handling trades and printing result to stdout
+SubscriptionConfig provides details about the rics and the Handlers for handling the trades for that ric
+
+for example in subscriptionConfig file you can define entry like below:
+XYZ LN,LargestTradeHandler:AveragePriceHandler
+
