@@ -7,10 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * TradeFeedListener listens for trades in its queue and process them It currently has a capacity of
@@ -33,7 +30,7 @@ public class TradeFeedListener implements FeedListener<Trade>, Startable, Stoppa
   public TradeFeedListener(SubscriptionCache subscriptionCache, Feed<Trade> feed) {
     this.subscriptionCache = subscriptionCache;
     this.feed = feed;
-    queue = new LinkedBlockingQueue<>(8192);
+    queue = new ArrayBlockingQueue<>(CAPACITY);
   }
 
   @Override
@@ -46,11 +43,10 @@ public class TradeFeedListener implements FeedListener<Trade>, Startable, Stoppa
     feed.subscribe(this);
     executorService.execute(
         () -> {
-          Collection<Trade> entries = new ArrayList<>(CAPACITY);
           while (!isTerminated) {
             try {
               Trade trade = queue.take();
-              processTrade(trade, entries);
+              processTrade(trade);
             } catch (InterruptedException e) {
               // call interrupt to set the interrupt status to notify thread has terminated
               Thread.currentThread().interrupt();
@@ -60,17 +56,17 @@ public class TradeFeedListener implements FeedListener<Trade>, Startable, Stoppa
         });
   }
 
-  void processTrade(Trade trade, Collection<Trade> entries) {
-    entries.add(trade);
-    queue.drainTo(entries, CAPACITY - 1); // pull down all entries we can
-    LOGGER.info("processing trades {}", entries);
-    entries.forEach(
-        t -> {
-          String symbol = t.getSymbol();
-          SubscriptionConfig config = subscriptionCache.get(symbol);
-          config.getHandlers().forEach(handler -> handler.handle(t));
-        });
-    entries.clear();
+  void processTrade(Trade trade) {
+    LOGGER.info("processing trade {}", trade);
+    String symbol = trade.getSymbol();
+    SubscriptionConfig config = subscriptionCache.get(symbol);
+    for (TradeHandler h : config.getHandlers()) {
+      try {
+        h.handle(trade);
+      } catch (Exception ex) {
+        LOGGER.info("Failed to process trade ", ex);
+      }
+    }
   }
 
   int getQueueSize() {

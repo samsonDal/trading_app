@@ -44,7 +44,7 @@ public class TradeFeedListenerTest {
         when(trade.getSymbol()).thenReturn(symbol);
         when(subscriptionCache.get(symbol)).thenReturn(subscriptionConfig);
         when(subscriptionConfig.getHandlers()).thenReturn(handlers);
-        feedListener.processTrade(trade, new ArrayList<>());
+        feedListener.processTrade(trade);
         verify(handler).handle(trade);
     }
 }

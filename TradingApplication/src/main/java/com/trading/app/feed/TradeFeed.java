@@ -6,8 +6,8 @@ import com.trading.app.model.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * TradeFeed should run on a separate thread. For real feeds we don't want this thread to be too
@@ -19,17 +19,17 @@ import java.util.List;
 public class TradeFeed implements Feed<Trade> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Trade.class);
-  private final List<FeedListener<Trade>> listeners = new ArrayList<>();
+  private final List<FeedListener<Trade>> listeners = new CopyOnWriteArrayList<>();
 
   public TradeFeed() {}
 
   @Override
-  public void subscribe(FeedListener<Trade> listener) {
+  public synchronized void subscribe(FeedListener<Trade> listener) {
     if (!listeners.contains(listener)) listeners.add(listener);
   }
 
   @Override
-  public void unsubscribe(FeedListener<Trade> listener) {
+  public synchronized void unsubscribe(FeedListener<Trade> listener) {
     listeners.remove(listener);
   }
 
